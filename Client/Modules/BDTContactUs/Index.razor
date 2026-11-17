@@ -1,0 +1,197 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using BCN.Services
+@namespace BCN.BDTContactUsModule
+
+@inherits Oqtane.Modules.ModuleBase
+
+@inject ISettingService SettingService
+@inject IStringLocalizer<Index> Localizer
+@inject IUsersService UserService
+@inject NavigationManager NavManager
+@inject INotificationService NotificationService
+
+<br /><br /><br />
+<div class="row justify-content-center">
+        <h3>Questions? Please let us know</h3>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+
+                <EditForm Model="@ContactModel" OnValidSubmit="@OnSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-2">
+                        <label for="name" class="form-label">Name</label>
+                        <InputText id="name" class="form-control" @bind-Value="ContactModel.ContactName" />
+                        <ValidationMessage For="@(() => ContactModel.ContactName)" class="text-danger small" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="email" class="form-label">Email Address</label>
+                        <InputText id="email" type="email" class="form-control" @bind-Value="ContactModel.EmailAddress" />
+                        <ValidationMessage For="@(() => ContactModel.EmailAddress)" class="text-danger small" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="message" class="form-label">Message</label>
+                        <InputTextArea id="message" class="form-control" rows="3" @bind-Value="ContactModel.Message" />
+                        <ValidationMessage For="@(() => ContactModel.Message)" class="text-danger small" />
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn send-button" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Sending...</span>
+                            }
+                            else
+                            {
+                                <span>Send Message</span>
+                            }
+                        </button>
+                    </div>
+
+                </EditForm>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private ContactRequest ContactModel { get; set; } = new ContactRequest();
+    private string emailAddressNotificationsTo = "";
+    private bool isSubmitting = false;
+       
+    private async Task OnSubmit()
+    {
+        try
+        {
+            ContactModel.ContactName = ContactModel.ContactName.Trim();
+            ContactModel.EmailAddress = ContactModel.EmailAddress.Trim();
+            ContactModel.Message = ContactModel.Message.Trim();
+            if (string.IsNullOrWhiteSpace(ContactModel.ContactName) || string.IsNullOrWhiteSpace(ContactModel.EmailAddress) || string.IsNullOrWhiteSpace(ContactModel.Message))
+            {
+                AddModuleMessage("Please fill in all fields", MessageType.Warning);
+                return;
+            }
+
+            isSubmitting = true;
+
+            await LoggingService.Log(
+            ModuleState.PageId,
+            ModuleState.ModuleId,
+            PageState.User?.UserId,
+            GetType().AssemblyQualifiedName,
+            "Contact Us Request", // <-- Feature
+            Oqtane.Enums.LogFunction.Create,
+            Oqtane.Shared.LogLevel.Information,
+            null,
+            "A BDT Contact Us Request was submitted. Contact Name: {ContactName}, email {EmailAddress} and message: {Message}",
+            ContactModel.ContactName, ContactModel.EmailAddress, ContactModel.Message);
+
+            var siteSettings = await SettingService.GetSettingsAsync("Site", SiteState.Alias.SiteId);
+            @if ((siteSettings.ContainsKey("SendNotificationsTo"))) // This settings must not be Private in SQL.Settings table
+            {
+                emailAddressNotificationsTo = siteSettings["SendNotificationsTo"];
+            }
+
+            if (!string.IsNullOrWhiteSpace(emailAddressNotificationsTo))
+            {
+                // public Notification(int siteId, string toDisplayName, string toEmail, string subject, string body);
+                await NotificationService.AddNotificationAsync(new Notification(PageState.Site.SiteId, "BDT Admin", emailAddressNotificationsTo, "New Contact Us Message", $"From: {ContactModel.ContactName}\nEmail: {ContactModel.EmailAddress}\nMessage: {ContactModel.Message}"));
+            }
+
+            if (PageState.User?.Username == "JASHost") //for testing
+            {
+                await NotificationService.AddNotificationAsync(new Notification(PageState.Site.SiteId, "BDT Host", "CustomerSupport@bothworldssoftware.com", "New Contact Us Message Test", $"Name: {ContactModel.ContactName}\nEmail: {ContactModel.EmailAddress}\nMessage: {ContactModel.Message}"));
+            }
+
+            AddModuleMessage("The BDT Staff have been notified and will respond shortly.", MessageType.Info);
+            isSubmitting = false;
+            ContactModel = new ContactRequest();
+            await ScrollToPageTop();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Sending Email");
+            AddModuleMessage(Localizer["Error.SendEmail"], MessageType.Error);
+        }
+    }
+
+    public class ContactRequest
+    {
+        private string _contactName;
+        private string _emailAddress;
+        private string _emailMessage;
+
+        [Required(ErrorMessage = "Name is required.")]
+        [StringLength(50, ErrorMessage = "Name cannot exceed 50 characters.")]
+        public string ContactName
+        {
+            get => _contactName;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value)) return;
+
+                // 1. Strip leading/trailing whitespaces
+                string cleanName = value.Trim();
+                if (string.IsNullOrWhiteSpace(cleanName)) return;
+
+                // 2. Remove dangerous injection characters (e.g., control characters, NULL bytes)                
+                string validNameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -'";
+                cleanName = new string(cleanName.Where(c => validNameChars.Contains(c)).ToArray());
+
+                _contactName = cleanName;
+            }
+        }
+
+        [Required(ErrorMessage = "Email address is required.")]
+        [EmailAddress(ErrorMessage = "This email format is invalid.")]
+        public string EmailAddress
+        {
+            get => _emailAddress;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value)) return;
+
+                // 1. Strip leading/trailing whitespaces
+                string cleanEmail = value.Trim();
+                if (string.IsNullOrWhiteSpace(cleanEmail)) return;
+
+                // 2. Remove dangerous injection characters (e.g., control characters, NULL bytes)
+                // Note: Standard email RFC allows many characters, so adjust this list for your needs
+                char[] invalidChars = { ' ', '\0', '\n', '\r', '<', '>', '!', '~', '?', '\"', '\'' };
+                foreach (var c in invalidChars)
+                {
+                    cleanEmail = cleanEmail.Replace(c.ToString(), string.Empty);
+                }
+
+                _emailAddress = cleanEmail;
+            }
+        }
+
+        [Required(ErrorMessage = "Message is required.")]
+        public string Message
+        {
+            get => _emailMessage;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value)) return;
+
+                // 1. Strip leading/trailing whitespaces
+                string cleanMessage = value.Trim();
+                if (string.IsNullOrWhiteSpace(cleanMessage)) return;
+
+                // 2. Remove dangerous injection characters (e.g., control characters, NULL bytes)
+                string validMessageChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -',.!?";
+                cleanMessage = new string(cleanMessage.Where(c => validMessageChars.Contains(c)).ToArray());
+
+                _emailMessage = cleanMessage;
+            }
+        }
+    }
+}

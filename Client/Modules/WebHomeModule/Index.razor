@@ -1,0 +1,114 @@
+@using Microsoft.AspNetCore.Authorization
+@using Oqtane.Services
+@using System.Security.Claims
+
+@inherits Oqtane.Modules.ModuleBase
+@namespace BCN.WebHomeModule
+
+@inject NavigationManager NavManager
+
+<main id="main">
+    <section class="hero section-pad">
+        <div class="hero-copy reveal">
+            <p class="eyebrow">Concierge-level IT support since 2007</p>
+            <h1>Black Cat Networks</h1>
+            <h2 class="hero-supporting">Managed IT, cybersecurity, compliance readiness, and strategic technology support for organizations that depend on secure, reliable systems.</h2>
+            <p class="hero-lede">Experienced engineering, plain-English guidance, and long-term partnership for teams that cannot afford casual IT support.</p>
+            <div class="nav-links" data-nav-links>
+                <a href="/" aria-current="page">Home</a>
+                <a href="/#services">Services</a>
+                <a href="/#approach">Approach</a>
+                <a href="/#why">Why Us</a>
+                <a class="nav-cta" href="/contact-us">Start a Conversation</a>
+            </div>
+        </div>
+        <div class="hero-visual reveal" aria-label="Black Cat Networks technology mascot">
+            <div class="cat-stage" aria-hidden="true">
+                <span class="circuit-line circuit-line-a"></span>
+                <span class="circuit-line circuit-line-b"></span>
+                <span class="circuit-line circuit-line-c"></span>
+                <span class="signal-dot signal-dot-a"></span>
+                <span class="signal-dot signal-dot-b"></span>
+                <span class="signal-dot signal-dot-c"></span>
+                <span class="scanner-beam"></span>
+                <span class="cat-platform"></span>
+                <img class="cat-image" src="/Themes/BCN.MyTheme/assets/cat-image.png" alt="">
+            </div>
+        </div>
+    </section>
+
+    <section class="trust-bar" aria-label="Service highlights">
+        <div><span>◆</span> Managed IT</div>
+        <div><span>◆</span> Cybersecurity</div>
+        <div><span>◆</span> Network Infrastructure</div>
+        <div><span>◆</span> Microsoft & Cloud</div>
+        <div><span>◆</span> Business Continuity</div>
+        <div><span>◆</span> Compliance & Risk</div>
+    </section>
+
+    <section id="approach" class="section-pad split">
+        <div class="reveal">
+            <p class="eyebrow">A proactive approach</p>
+            <h2>Experienced technology support built to prevent problems, not just react to them.</h2>
+        </div>
+        <div class="content-panel reveal">
+            <p>Business technology should be steady, secure, and easy to rely on. Black Cat Networks focuses on monitoring, maintenance, security, compliance awareness, and planning so potential issues can be identified early and handled quickly.</p>
+            <p>Recommendations are practical and tailored to each environment. The goal is dependable systems, clearer decisions, and fewer surprises without unnecessary complexity or confusing technical language.</p>
+        </div>
+    </section>
+
+    <section class="section-pad card-grid three compact">
+        <article class="card reveal"><span class="card-mark">01</span><h3>Keep Work Moving</h3><p>Reduce downtime with responsive support, proactive maintenance, and dependable daily operations.</p></article>
+        <article class="card reveal"><span class="card-mark">02</span><h3>Reduce Risk</h3><p>Strengthen users, devices, networks, cloud tools, and data with security-first practices and compliance-aware controls.</p></article>
+        <article class="card reveal"><span class="card-mark">03</span><h3>Plan With Confidence</h3><p>Make better decisions about infrastructure, continuity, budgets, projects, and long-term technology investment.</p></article>
+    </section>
+
+    <section id="services" class="section-pad dark-panel">
+        <div class="section-heading reveal">
+            <p class="eyebrow">Services</p>
+            <h2>Technology services for organizations that value experience, security, and continuity.</h2>
+            <p class="lead">Practical support from daily operations through executive-level planning.</p>
+        </div>
+        <div class="card-grid three short service-grid">
+            <a class="service-card reveal" href="managed-it"><h3>Managed IT Services</h3><p>Concierge-level support, monitoring, maintenance, vendor coordination, and long-term technology management.</p><span class="card-link">View Service</span></a>
+            <a class="service-card reveal" href="cybersecurity"><h3>Cybersecurity</h3><p>Layered protection for people, devices, accounts, networks, and data with controls that support compliance and insurance expectations.</p><span class="card-link">View Service</span></a>
+            <a class="service-card reveal" href="network-support"><h3>Network Infrastructure</h3><p>Reliable firewall, switching, wireless, VPN, and connectivity support for secure daily operations.</p><span class="card-link">View Service</span></a>
+            <a class="service-card reveal" href="cloud-services"><h3>Microsoft & Cloud Services</h3><p>Microsoft 365, identity, collaboration, migration, governance, and cloud security support.</p><span class="card-link">View Service</span></a>
+            <a class="service-card reveal" href="backup-recovery"><h3>Business Continuity & Disaster Recovery</h3><p>Backup, recovery, testing, and continuity planning that helps protect operations when systems fail.</p><span class="card-link">View Service</span></a>
+            <a class="service-card reveal" href="compliance-risk"><h3>Compliance & Risk Management</h3><p>Practical technical controls and documentation support for HIPAA, PCI DSS, cyber insurance, vendor reviews, and audit readiness.</p><span class="card-link">View Service</span></a>
+            <a class="service-card reveal" href="strategic-it-consulting"><h3>Strategic IT Consulting</h3><p>Experienced guidance for technology roadmaps, budgeting, assessments, projects, procurement, and vCIO support.</p><span class="card-link">View Service</span></a>
+        </div>
+    </section>
+
+    <section id="why" class="section-pad values">
+        <div class="section-heading reveal">
+            <p class="eyebrow">Why Black Cat Networks</p>
+            <h2>Trusted IT leadership for organizations that depend on secure, reliable systems.</h2>
+        </div>
+        <div class="card-grid three">
+            <article class="card reveal"><h3>Experienced Engineering</h3><p>Support from people who understand systems, risk, business urgency, and long-term operational impact.</p></article>
+            <article class="card reveal"><h3>Compliance-Aware Security</h3><p>Security planning that considers regulatory requirements, cyber insurance expectations, vendor reviews, and audit readiness.</p></article>
+            <article class="card reveal"><h3>Clear Priorities</h3><p>Recommendations are explained in plain language and tied to business impact, urgency, and budget.</p></article>
+            <article class="card reveal"><h3>Direct Accountability</h3><p>A service relationship built around responsiveness, trust, and a clear understanding of business needs.</p></article>
+            <article class="card reveal"><h3>Concierge-Level Support</h3><p>Responsive, respectful service from an experienced team that understands business urgency.</p></article>
+            <article class="card reveal"><h3>Long-Term Partnership</h3><p>Guidance for roadmaps, lifecycle planning, budgeting, resilience, and smarter technology investment.</p></article>
+        </div>
+    </section>
+
+    <section class="section-pad feature-band">
+        <div class="feature-copy reveal">
+            <p class="eyebrow">Experienced. Responsive. Trusted.</p>
+            <h2>Discreet, competent IT leadership when reliability, security, and trust matter most.</h2>
+            <p>Black Cat Networks helps organizations operate more efficiently, communicate clearly, and stay better protected against technology and compliance risk.</p>
+        </div>
+    </section>
+
+    <section class="section-pad">
+        <div class="cta-band reveal">
+            <p class="eyebrow">Ready for better IT?</p>
+            <h2>Let's solve your technology challenges.</h2>
+            <p class="lead">Whether you need ongoing IT support, security improvements, compliance readiness, continuity planning, cloud services, or strategic guidance, the next step is simple.</p>
+            <div class="hero-actions centered"><a class="button primary" href="contact-us">Start a Conversation</a></div>
+        </div>
+    </section>
+</main>

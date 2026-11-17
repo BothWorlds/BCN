@@ -1,0 +1,143 @@
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 2px solid black;
+    padding: 8px;
+    min-height: 48px;
+    max-height: 48px;
+
+    p {
+        line-height: 16px !important;
+        font-size: .875rem !important;
+    }
+}
+
+tr {
+    line-height: 16px !important;
+    height: 38px !important;
+}
+
+.data-cell {
+    background-color: #ffc8af;
+    text-align: right;
+    width: 138px !important;
+
+    p {
+        margin: 0 !important;
+    }
+}
+
+.question-text {
+    p {
+        margin: 0 !important;
+    }
+}
+
+.divider {
+    width: 40px;
+    background-color: #ccc;
+    border-top: 0 !important;
+}
+
+    .divider:not(.last-row-cell) {
+        border-bottom: 0 !important;
+    }
+
+    .divider:not(.first-row-cell) {
+        border-top: 0 !important;
+    }
+
+.header {
+    text-align: center;
+    background-color: lightblue;
+
+    p {
+        margin: 0 !important;
+        line-height: 16px !important;
+    }
+}
+
+.total {
+    p {
+        margin: 0 !important;
+        line-height: 16px !important;
+    }
+}
+
+.text-align-center {
+    text-align: center;
+}
+
+.text-align-left {
+    text-align: left;
+}
+
+.text-align-right {
+    text-align: right;
+}
+
+.no-border {
+    border: 0 !important;
+
+    td {
+        border: 0 !important;
+    }
+}
+
+.k-numerictextbox .k-spinner-increase {
+    display: none;
+}
+
+.k-numerictextbox .k-spinner-decrease {
+    display: none;
+}
+
+.k-input-md .k-input-spinner, .k-picker-md .k-input-spinner {
+    width: 0;
+}
+
+.background-valid {
+    input {
+        background-color: #ccfacc;
+    }
+}
+
+.background-invalid {
+    border: 1px solid red;
+
+    input {
+        background-color: #ffdcdc;
+    }
+}
+.textsmaller {
+    font-size:85%;
+}
+.compact {
+    line-height:.9em;
+}
+
+.oqtane-telerik-link,
+.oqtane-telerik-link:link,
+.oqtane-telerik-link:visited,
+.oqtane-telerik-link:hover,
+.oqtane-telerik-link:active,
+.oqtane-telerik-link:focus {
+    color: var(--kendo-color-on-primary, #fff) !important;
+    text-decoration: none !important;
+}
+
+button {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.5rem;
+    font: inherit;
+    font-size:smaller;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--accent);
+    cursor: pointer;
+}

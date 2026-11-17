@@ -1,0 +1,95 @@
+@using System.Globalization
+@using BCN.Client.Services
+@using BCN.Shared.Models.DataModels
+@using Microsoft.EntityFrameworkCore
+@using Radzen
+@using Radzen.Blazor
+
+@inherits Oqtane.Modules.ModuleBase
+@namespace BCN.AllNotificationViewModule
+
+@inject NavigationManager NavManager
+@inject ISettingService SettingService
+@inject IStringLocalizer<Index> Localizer
+@inject IStringLocalizer<SharedResources> SharedLocalizer
+@inject BCN.Client.Services.INotificationService NotificationService
+@inject IPageService PageService
+@inject IPageModuleService PageModuleService
+@inject IUserService UserService
+
+@inject BCN.Client.Services.INotificationService NotificationService 
+
+<RadzenTheme Theme="Material" />
+<style>
+    .rz-grid-table td {
+        white-space: normal !important;
+    }
+</style>
+<br />
+<br />
+<br />
+<div class="row justify-content-center">
+    <h4>
+        Notifications&nbsp;&nbsp;
+        <RadzenButton Icon="home" Click="@OnHomeClick" />
+    </h4>
+    <div class="col-md-12">             
+        @if (isLoading == true)
+        {
+            <p>Loading...</p>
+        }
+        else
+        {
+
+                <RadzenDataGrid Data="@notifications"
+                                @ref="Grid"
+                                TItem="Notification"
+                                AllowPaging="true"
+                                AllowSorting="true"
+                                AllowFiltering="true"
+                                PageSize="10">
+                    <Columns>
+                        <RadzenDataGridColumn Property="@nameof(Notification.NotificationId)" Title="N ID" Width="80px" />
+                        <RadzenDataGridColumn Property="@nameof(Notification.CreatedOn)" Title="Created Date" FormatString="{0:d}" />
+                        <RadzenDataGridColumn Property="@nameof(Notification.DeliveredOn)" Title="Delivered Date" FormatString="{0:d}" />
+                        <RadzenDataGridColumn Property="@nameof(Notification.Subject)" Title="Subject" />
+                    </Columns>
+                    <Template Context="data">
+                            @{
+                                var notification = (Notification)data;
+                                <div class="p-3 bg-light border w-90">
+                                    <strong>Notification Email Body:</strong>
+                                    <p>@notification.Body</p>
+                                </div>
+                            }
+                        </Template>
+                        <EmptyTemplate>
+                                <p style="text-align: center; color: gray;">
+                                    No items to display!
+                                </p>
+                        </EmptyTemplate>
+                </RadzenDataGrid>
+        }
+    </div>
+ </div>
+
+@code {
+    //NOTE - Action column with Detail button to Detail Module works but return url fails and
+    // leaves this page in odd state so button is hidden for now
+    private bool isLoading = true;
+    IEnumerable<Notification> notifications;
+    private RadzenDataGrid<Notification>? Grid;
+
+    private void OnHomeClick()
+    {
+        NavManager.NavigateTo("admin-activity");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch data based on the passed parameter
+        notifications = await NotificationService.GetNotificationsAllAsync(1);
+        notifications = notifications.OrderByDescending(n => n.NotificationId);
+        isLoading = false;
+    }
+}

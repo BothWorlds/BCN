@@ -1,0 +1,462 @@
+@using BCN.Shared.Models.DataModels
+@using System.Globalization
+@using Radzen
+@using Radzen.Blazor
+@using Log = Oqtane.Models.Log
+
+@inherits Oqtane.Modules.ModuleBase
+@namespace BCN.AllLogViewModule
+
+@inject NavigationManager NavigationManager
+@inject ISettingService SettingService
+@inject IStringLocalizer<Index> Localizer
+@inject IStringLocalizer<SharedResources> SharedLocalizer
+@inject IPageService PageService
+@inject IPageModuleService PageModuleService
+@inject IUserService UserService
+@inject BCN.Client.Services.ILogService LogService
+@inject DialogService DialogService
+
+<RadzenTheme Theme="Material" />
+<style>
+    .rz-grid-table td {
+        white-space: normal !important;
+    }
+    .rz-p-sm-12 {
+        padding:0px !important;
+    }
+</style>
+<br /><br /><br />
+@if (loading == true)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="row justify-content-center">
+        <h4>
+            Logs&nbsp;&nbsp;
+            <RadzenButton Icon="home" Click="@OnHomeClick" />
+        </h4>
+        <div class="row mb-1 align-items-center">
+            <div class="col-12">
+              <div class="row">
+                <div class="col-3">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+                <RadzenLabel Text="Feature" Component="DropDownFeatures" />
+                <RadzenDropDown @bind-Value=@Filter.Feature Data=@Features Name="DropDownFeatures" Change="@(args => OnFeatureChanged(args?.ToString()))" />
+            </RadzenStack>
+                    </div>
+                    <div class="col-3">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+                <RadzenLabel Text="Level" Component="DropDownLevels" />
+                <RadzenDropDown @bind-Value=@Filter.Level Data=@Levels Name="DropDownLevels" Change="@(args => OnLevelChanged(args?.ToString()))" />
+            </RadzenStack>
+                    </div>
+                    <div class="col-3">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+                <RadzenLabel Text="Function" Component="DropDownFunctions" />
+                <RadzenDropDown @bind-Value=@Filter.Function Data=@Functions Name="DropDownFunctions" Change="@(args => OnFunctionChanged(args?.ToString()))" />
+            </RadzenStack>
+                    </div>
+                    <div class="col-3">
+                        <RadzenButton Text="Clear Filters" Click=@ClearFilters />
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <div class="col-12">
+            <RadzenDataGrid TItem="Log" Data="_logs" @ref="Grid" Style="height:500px"
+                Count="@_dataCount" IsLoading="@IsGridLoading"
+                PageSizeChanged="@(async (e) => { Filter.PageSize = e; await Refresh(); })"
+                PageSize="@Filter.PageSize" PageSizeOptions="@pageSizeOptions" LoadData="@LoadData"
+                AllowPaging="true" AllowVirtualization="false">
+                    <EmptyTemplate>
+                        <p class="w-100 text-danger text-center lead">There are no Log records available.</p>
+                    </EmptyTemplate>
+                    <Columns>
+                        <RadzenDataGridColumn Property="@nameof(Oqtane.Models.Log.LogId)" Title="LogId" />
+                        <RadzenDataGridColumn Title="Date">
+                            <Template Context="log">
+                                @(UtcToLocal(((Log)log).LogDate).Value.ToString("g"))
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Property="@nameof(Oqtane.Models.Log.Feature)" Title="Feature" />
+                        <RadzenDataGridColumn Property="@nameof(Oqtane.Models.Log.Level)" Title="Level" />
+                        <RadzenDataGridColumn Property="@nameof(Oqtane.Models.Log.Function)" Title="Function" />
+                    </Columns>
+                    <Template Context="data">
+                        @{
+                            var log = (Log)data;
+                            <div class="p-3 bg-light border w-90">
+                                <strong>Log Message:</strong>
+                                <p>@log.Message</p>
+                            </div>
+                        }
+                    </Template>
+                    <EmptyTemplate>
+                        <p style="text-align: center; color: gray;">
+                            No items to display!
+                        </p>
+                    </EmptyTemplate>
+                </RadzenDataGrid>
+            </div>
+}
+
+@code {
+    //NOTE - Action column with Detail button to Detail Module works but return url fails and
+    // leaves this page in odd state so button is hidden for now
+    private List<Log> _logs = new List<Log>();
+    private int _retention = 30;
+    private bool IsGridLoading { get; set; } = false;
+    private IEnumerable<int> pageSizeOptions = new int[] { 5, 10, 20, 50 };
+    private Log? SelectedRecord { get; set; }
+    private bool IsVisible { get; set; }
+    // private bool _initialized = false;
+    // private int _logId;
+    private string _logDate = string.Empty;
+    private string _siteId = string.Empty;
+    private string _level = string.Empty;
+    private string _feature = string.Empty;
+    private string _function = string.Empty;
+    private string _category = string.Empty;
+    private string _pageName = string.Empty;
+    private string _moduleTitle = string.Empty;
+    private string _username = string.Empty;
+    private string _url = string.Empty;
+    private string _template = string.Empty;
+    private string _message = string.Empty;
+    private string _exception = string.Empty;
+    private string _properties = string.Empty;
+    private string _server = string.Empty;
+
+    private RadzenDataGrid<Log>? Grid;
+
+    private LogFilterModel Filter = new();
+
+    public override string UrlParametersTemplate => "/{feature}/{level}/{function}/{rows}/{page}";
+    public override SecurityAccessLevel SecurityAccessLevel => SecurityAccessLevel.Host;
+    public DateTime? newValue { get; set; } = null;
+
+    private List<int?> PageSizes = new()
+    {
+        10, 20, 50, 100
+    };
+
+    private List<string> Levels = new()
+    {
+        "Trace", "Debug", "Information", "Warning", "Error", "Critical"
+    };
+
+    private List<string> Functions = new()
+    {
+        "Create", "Read", "Update", "Delete", "Security", "Other"
+    };
+
+    private List<string> Features = new()
+    {
+        "Contact Us Request", "Login"
+    };
+
+    private void OnHomeClick()
+    {
+        NavigationManager.NavigateTo("admin-activity");
+    }
+
+    bool loading = false;
+
+    // public override List<Resource> Resources => new List<Resource>()
+    // {
+    //     new Script("_content/Radzen.Blazor/Radzen.Blazor.js")
+    // };
+    
+    private async Task Refresh()
+    {
+        Filter.PageNumber = 0; // reset paging when filters change
+        //records = await MyService.GetDataAsync();
+        // Tell the grid to reload and redraw
+        if (Grid != null)
+        {
+            await Grid.Reload();
+        }
+        StateHasChanged();
+    }
+
+    private async Task OnLogDateChanged(DateTime? newValue)
+    {
+        Filter.LogDate = newValue;
+        await Refresh();
+    }
+
+    private async Task OnLevelChanged(string? value)
+    {
+        Filter.Level = value;
+        await Refresh();
+    }
+
+    private async Task OnFunctionChanged(string? value)
+    {
+        Filter.Function = value;
+        await Refresh();
+    }
+
+    private async Task OnFeatureChanged(string? value)
+    {
+        Filter.Feature = value;
+        await Refresh();
+    }
+        
+    private async Task ApplyFilters()
+    {
+        Filter.PageNumber = 0;
+
+        //Grid!.Rebind();
+        await Grid.Reload();
+        StateHasChanged();
+    }
+
+    private async Task ClearFilters()
+    {
+        var pageSize = Filter.PageSize;
+        Filter = new LogFilterModel
+        {
+            PageSize = pageSize,
+            PageNumber = 0
+        };
+
+        //Grid!.Rebind();
+        await Grid.Reload();
+        StateHasChanged();
+    }
+
+    // private async Task ReadLogs(GridReadEventArgs args)
+    // {
+    //     IsGridLoading = true;
+    //     try
+    //     {
+    //         Filter.PageNumber = args.Request.Page - 1;
+
+    //         var result = await LogService.GetLogsAsync(
+    //             siteId: SiteState.Alias.SiteId,
+    //             filter: Filter
+    //         );
+
+    //         _logs = result.Data;
+
+    //         args.Data = result.Data;
+    //         args.Total = result.Total;
+    //     }
+    //     finally
+    //     {
+    //         IsGridLoading = false;
+    //     }
+    // }
+
+    private int _dataCount = 0;
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        IsGridLoading = true;
+        try
+        {
+            var top = args.Top.GetValueOrDefault(Filter.PageSize > 0 ? Filter.PageSize : 20);
+            if (top <= 0)
+            {
+                top = 20;
+            }
+
+            var skip = args.Skip.GetValueOrDefault(0);
+            if (skip < 0)
+            {
+                skip = 0;
+            }
+
+            Filter.PageSize = top;
+            Filter.PageNumber = skip / top;
+
+            var siteId = SiteState?.Alias?.SiteId ?? 1;
+            if (siteId <= 0)
+            {
+                siteId = 1;
+            }
+
+            var result = await LogService.GetLogsAsync(siteId, Filter);
+            if ((result?.Total ?? 0) == 0 && siteId != 1)
+            {
+                result = await LogService.GetLogsAsync(1, Filter);
+            }
+            _logs = result?.Data ?? new List<Log>();
+            _dataCount = result?.Total ?? 0;
+        }
+        catch (Exception ex)
+        {
+            _logs = new List<Log>();
+            _dataCount = 0;
+            await logger.LogError(ex, "Error Loading Logs {Error}", ex.Message);
+            AddModuleMessage(Localizer["Error.Log.Load"], MessageType.Error);
+        }
+        finally
+        {
+            IsGridLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender && Grid != null)
+        {
+            await Grid.Reload();
+        }
+    }
+
+        private string GetReturnUrl()
+    {
+        return NavigateUrl(
+            PageState.Page.Path,
+            AddUrlParameters(
+                Uri.EscapeDataString(Filter.Feature ?? "All Features"),
+                Uri.EscapeDataString(Filter.Level ?? "All Levels"),
+                Uri.EscapeDataString(Filter.Function ?? "All Functions"),
+                Filter.PageSize,
+                Filter.PageNumber
+            ));
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (UrlParameters.ContainsKey("feature"))
+            {
+                Filter.Feature = Uri.UnescapeDataString(UrlParameters["feature"]);
+            }
+            if (UrlParameters.ContainsKey("level"))
+            {
+                Filter.Level = Uri.UnescapeDataString(UrlParameters["level"]);
+            }
+            if (UrlParameters.ContainsKey("function"))
+            {
+                Filter.Function = Uri.UnescapeDataString(UrlParameters["function"]);
+            }
+            if (UrlParameters.ContainsKey("rows"))
+            {
+                Filter.PageSize = int.Parse(UrlParameters["rows"]);
+            }
+            if (UrlParameters.ContainsKey("page") && int.TryParse(UrlParameters["page"], out int page))
+            {
+                Filter.PageNumber = Math.Max(0, page);
+            }
+
+            if (Grid != null)
+            {
+                await Refresh();
+            }
+
+            var settings = await SettingService.GetSiteSettingsAsync(PageState.Site.SiteId);
+            _retention = int.Parse(SettingService.GetSetting(settings, "LogRetention", "30"));
+
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Loading Logs {Error}", ex.Message);
+            AddModuleMessage(Localizer["Error.Log.Load"], MessageType.Error);
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // external link to log item will display Details component
+            if (PageState.QueryString.ContainsKey("id") && int.TryParse(PageState.QueryString["id"], out int id))
+            {
+                NavigationManager.NavigateTo(EditUrl(PageState.Page.Path, ModuleState.ModuleId, "Detail", $"/{id}"));
+            }
+        }
+    }
+
+    //use this with the grid's OnRowClick event to show details in a popup
+    //private void ShowDetailPopup(GridRowClickEventArgs args)
+    //{
+    // // Cast the item to your model type
+    // SelectedRecord = args.Item as Log;
+    // IsVisible = true;
+    //}
+
+    //use this with a command column button to show details in a popup
+    // private void ShowDetailPopup(GridCommandEventArgs args)
+    // protected async Task ShowDetailPopup(GridCommandEventArgs args)
+    // {
+    //     SelectedRecord = args.Item as Log;
+
+    //     try
+    //     {
+    //         // _logId = Int32.Parse(UrlParameters["id"]);
+    //         // var log = await LogService.GetLogAsync(_logId);
+    //         if (SelectedRecord != null)
+    //         {
+    //             _logDate = UtcToLocal(SelectedRecord.LogDate).Value.ToString(CultureInfo.CurrentCulture);
+    //             _siteId = SelectedRecord.SiteId.ToString();
+    //             _feature = SelectedRecord.Feature;
+    //             _level = SelectedRecord.Level;
+    //             _function = SelectedRecord.Function;
+    //             _category = SelectedRecord.Category;
+
+    //             if (SelectedRecord.PageId != null)
+    //             {
+    //                 var page = await PageService.GetPageAsync(SelectedRecord.PageId.Value);
+    //                 if (page != null)
+    //                 {
+    //                     _pageName = page.Name;
+    //                 }
+    //             }
+
+    //             if (SelectedRecord.PageId != null && SelectedRecord.ModuleId != null && SelectedRecord.ModuleId != -1)
+    //             {
+    //                 var pagemodule = await PageModuleService.GetPageModuleAsync(SelectedRecord.PageId.Value, SelectedRecord.ModuleId.Value);
+    //                 if (pagemodule != null)
+    //                 {
+    //                     _moduleTitle = pagemodule.Title;
+    //                 }
+    //             }
+
+    //             if (SelectedRecord.UserId != null)
+    //             {
+    //                 var user = await UserService.GetUserAsync(SelectedRecord.UserId.Value, PageState.Site.SiteId);
+    //                 if (user != null)
+    //                 {
+    //                     _username = user.Username;
+    //                 }
+    //             }
+
+    //             _url = SelectedRecord.Url;
+    //             _template = SelectedRecord.MessageTemplate;
+    //             _message = SelectedRecord.Message;
+    //             _exception = SelectedRecord.Exception;
+    //             _properties = SelectedRecord.Properties;
+    //             _server = SelectedRecord.Server;
+    //             _initialized = true;
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         // await logger.LogError(ex, "Error Loading Log {LogId} {Error}", _logId, ex.Message);
+    //         AddModuleMessage(Localizer["Error.Log.Load"], MessageType.Error);
+    //     }
+
+    //     IsVisible = true;
+    // }
+
+    private void OnVisibleChanged(bool newValue)
+    {
+        IsVisible = newValue;
+    }
+
+    private void ClosePopup()
+    {
+        IsVisible = false;
+    }
+}

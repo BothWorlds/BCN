@@ -1,0 +1,53 @@
+@namespace BCN.SSATheme
+@using Microsoft.Extensions.Configuration
+@inherits ThemeBase
+@inject ISettingService SettingService
+@inject IConfiguration Configuration
+
+<a class="skip-link" href="#main">Skip to main content</a>
+<header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="/" aria-label="Severance Sign Art home">
+            <img class="brand-logo" src="Themes/BCN.SSATheme/images/severance-sign-art-logo-horizontal-v4.png" alt="Severance Sign Art" />
+        </a>
+        <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>Menu</button>
+        <div class="nav-links" data-nav-links>
+            <a href="/">Home</a><a href="/#services">Services</a><a href="/#process">Process</a><a href="/#about">About</a><a class="nav-cta" href="/contact-us">Request a Quote</a>
+        </div>
+    </nav>
+</header>
+
+<div class="content main-content">
+    <div class="container-fluid px-0"><div class="row g-0"><div class="col-md-12"><Pane Name="@PaneNames.Admin" /></div></div></div>
+    <div class="container-fluid px-0"><div class="row g-0"><div class="col-md-12"><Pane Name="@PaneNames.Default" /></div></div></div>
+</div>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-identity"><img src="Themes/BCN.SSATheme/images/severance-sign-art-logo-vertical-v4.png" alt="Severance Sign Art" /><div><p>Custom sign work for businesses, organizations, events, and communities in Northwest Florida.</p><a href="/contact-us">Start a project</a></div></div>
+        <div class="footer-links"><a href="/#services">Services</a><a href="/#process">Process</a><a href="/contact-us">Request a Quote</a></div>
+        <div class="footer-meta"><a href="tel:+18506435712">850-643-5712</a><span>10629 NW SR 20<br>Bristol, FL 32321</span><span>&copy; @_thisYear Severance Sign Art</span></div>
+    </div>
+    <div class="footer-admin"><AuthorizeView><a href="/admin-activity">Admin</a></AuthorizeView><UserProfile ShowRegister="@_register" /><Login ShowLogin="@_login" CssClass="btn-outline-light" /><ControlPanel ButtonClass="btn-outline-light" /></div>
+</footer>
+
+@code {
+    public override string Name => "SSATheme";
+    public override string Panes => PaneNames.Default;
+    private bool _login = true;
+    private bool _register = true;
+    private string _thisYear => DateTime.Now.Year.ToString();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) => await JSRuntime.InvokeVoidAsync("App.BCNSSATheme.init");
+
+    protected override void OnParametersSet()
+    {
+        try
+        {
+            var settings = SettingService.MergeSettings(PageState.Site.Settings, PageState.Page.Settings);
+            _login = bool.Parse(SettingService.GetSetting(settings, GetType().Namespace + ":Login", "true"));
+            _register = bool.Parse(SettingService.GetSetting(settings, GetType().Namespace + ":Register", "true"));
+        }
+        catch { }
+    }
+}

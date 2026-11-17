@@ -1,0 +1,25 @@
+@namespace BCN.AllAdminActivityModule
+@using Microsoft.Extensions.Configuration
+
+@inherits ModuleBase
+
+@inject IConfiguration Configuration
+@inject NavigationManager NavManager
+<br />
+<br />
+<br />
+<br />
+<br />
+<h4>Admin Activity</h4>
+<h4 class="fs-6">Version: @Configuration["BWSAppVersion"]</h4>
+<hr style="color:cyan" />
+<br />
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="row mb-3">
+            <button class="col-3" onclick="@(() => @NavManager.NavigateTo("log-view"))">Log View</button>
+            <button class="col-3" onclick="@(() => @NavManager.NavigateTo("notification-view"))">Notification View</button>
+            <button class="col-3" onclick="@(() => @NavManager.NavigateTo("site-settings"))">Site Settings</button>
+        </div>
+    </div>
+</div>

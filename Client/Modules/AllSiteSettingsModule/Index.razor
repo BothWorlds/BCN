@@ -1,0 +1,153 @@
+@namespace BCN.AllSiteSettingsModule
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using BCN.Services
+@using System.Threading.Tasks
+@using Radzen
+@using Radzen.Blazor
+
+@inherits ModuleBase
+
+@inject NavigationManager NavManager;
+@inject ISettingService _settingService;
+<br /><br /><br />
+
+<div class="row justify-content-center">
+    <h4>
+        Site Settings&nbsp;&nbsp;
+        <RadzenButton Icon="home" Click="@OnHomeClick" />
+    </h4>
+
+<div class="container-fluid">
+    @if (SiteSettingsModel != null)
+        {
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                <div class="card-body p-4">
+
+                    <EditForm Model="@SiteSettingsModel" OnValidSubmit="@OnSubmit">
+                        <DataAnnotationsValidator />
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="h-100 mb-3 p-2 bg-body-tertiary border rounded-3">
+                                    <div class="row">
+                                        <div class="col mb-3">
+                                            <label for="email" class="form-label">Enter an Email Address to Send Contact Us Notifications To<br />Enter Blank@Blank.com if Contact Us messages should NOT be Emailed to Admins and ONLY be Save in Logs</label>
+                                            <InputText id="email" type="email" class="form-control" @bind-Value="SiteSettingsModel.EmailAddress" />
+                                            <ValidationMessage For="@(() => SiteSettingsModel.EmailAddress)" class="text-danger small" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn send-button" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <span>Save Changes</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+
+                </div>
+                </div>
+            </div>
+        }
+        else
+        {
+        <p>Loading...</p>
+        }
+</div>
+
+</div>
+
+@code {
+    bool isSubmitting = false;
+
+    private SiteSettings SiteSettingsModel { get; set; } = new SiteSettings();
+
+    class SiteSettings
+    {
+        private string _emailAddress;
+
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Invalid email format.")]
+        public string EmailAddress
+        {
+            get => _emailAddress;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    _emailAddress = string.Empty;
+                    return;
+                }
+
+                // 1. Strip leading/trailing whitespaces
+                string cleanEmail = value.Trim();
+                if (string.IsNullOrWhiteSpace(cleanEmail)) 
+                {
+                    _emailAddress = string.Empty;
+                    return;
+                }
+
+                // 2. Remove dangerous injection characters (e.g., control characters, NULL bytes)
+                // Note: Standard email RFC allows many characters, so adjust this list for your needs
+                char[] invalidChars = { ' ', '\0', '\n', '\r', '<', '>', '!', '~', '?', '\"', '\'' };
+                foreach (var c in invalidChars)
+                {
+                    cleanEmail = cleanEmail.Replace(c.ToString(), string.Empty);
+                }
+
+                _emailAddress = cleanEmail;
+            }
+        }
+    }
+
+    private void OnHomeClick()
+    {
+        NavManager.NavigateTo("admin-activity");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var siteSettings = await _settingService.GetSettingsAsync("Site", SiteState.Alias.SiteId);
+        @if ((siteSettings.ContainsKey("SendNotificationsTo")))
+        {
+            SiteSettingsModel.EmailAddress = siteSettings["SendNotificationsTo"];
+        }
+        else
+        {
+            SiteSettingsModel.EmailAddress = string.Empty;
+        }
+    }
+
+    public async Task OnSubmit()
+    {
+        var settings = await _settingService.GetSettingsAsync("Site", SiteState.Alias.SiteId);
+
+        string NotToEmail = SiteSettingsModel.EmailAddress;
+        if (NotToEmail.ToLower() == "blank@blank.com")
+        {
+            NotToEmail = string.Empty;
+        }
+        if (settings.ContainsKey("SendNotificationsTo"))
+        {
+            settings["SendNotificationsTo"] = NotToEmail;
+        }
+        else
+        {
+            settings.Add("SendNotificationsTo", NotToEmail);
+        }
+
+        await _settingService.UpdateSettingsAsync(settings, "Site", SiteState.Alias.SiteId);
+
+        AddModuleMessage("Site settings have been updated.", MessageType.Success);
+    }
+}

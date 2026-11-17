@@ -1,0 +1,117 @@
+@namespace BCN.WebTheme
+@using Microsoft.Extensions.Configuration
+@inherits ThemeBase
+@inject ISettingService SettingService
+@inject IConfiguration Configuration
+@inject NavigationManager NavManager
+
+        <header class="site-header">
+            <nav class="nav" aria-label="Primary navigation">
+                <a class="brand" href="" aria-label="Black Cat Networks home">
+                    <img class="brand-logo" src="/Themes/BCN.WebTheme/assets/bc-logo-without-background.png" alt="">
+                    <span>Black Cat Networks</span>
+                </a>
+                <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>Menu</button>
+                <div class="nav-links" data-nav-links>
+                    <a href="/" aria-current="page">Home</a>
+                    <a href="#" @onclick="JumpToIndexServices">Services</a>
+                    <a href="#" @onclick="JumpToIndexApproach">Approach</a>            
+                    <a href="#" @onclick="JumpToIndexWhy">Why Us</a>
+                    <a class="nav-cta" href="/contact-us">Start a Conversation</a>                   
+                </div>
+            </nav>
+        </header>
+
+        <div class="content main-content mb-4">
+            <div class="container-fluid px-0">
+                <div class="row g-0">
+                    <div class="col-md-12">
+                        <Pane Name="@PaneNames.Admin" />
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid px-0">
+                <div class="row g-0">
+                    <div class="col-md-12">
+                        <Pane Name="@PaneNames.Default" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <footer class="footer">
+
+        <span>&copy; 2026 Black Cat Networks</span>   
+        <center>
+        <div class="w-100">
+        <center>
+            <a href="/#services">Services</a> &bull; <a href="/#approach">Approach</a> &bull; <a href="/contact-us">Start a Conversation</a> &bull;
+            <AuthorizeView>
+                <a class="nav-cta" href="/admin-activity">Admin</a>
+            </AuthorizeView>
+            <UserProfile ShowRegister="@_register" />
+            <Login ShowLogin="@_login" CssClass="btn-outline-dark" />
+            <ControlPanel ButtonClass="btn-outline-dark" />
+            </center>
+        </div>
+        </center>
+
+    </footer>
+
+@code {
+    public override string Name => "MyTheme";
+
+    public override string Panes => PaneNames.Default;
+
+    private bool _login = true;
+    private bool _register = true;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeVoidAsync("App.BCNWebMyTheme.init");
+    }
+
+    protected override void OnParametersSet()
+    {
+        try
+        {
+            var settings = SettingService.MergeSettings(PageState.Site.Settings, PageState.Page.Settings);
+            _login = bool.Parse(SettingService.GetSetting(settings, GetType().Namespace + ":Login", "true"));
+            _register = bool.Parse(SettingService.GetSetting(settings, GetType().Namespace + ":Register", "true"));
+        }
+        catch
+        {
+            // error loading theme settings
+        }
+    }
+
+    private void JumpToIndexServices()
+    {
+        // For a target section on the current page
+        //NavManager.NavigateTo("/#services");
+
+        // OR, force reload (useful if the module is on a completely different page)
+        //NavManager.NavigateTo("/home/#services", forceLoad: true);
+        NavManager.NavigateTo("/#services", forceLoad: true);
+    }
+
+    private void JumpToIndexApproach()
+    {
+        NavManager.NavigateTo("/#approach", forceLoad: true);
+    }
+
+    private void JumpToIndexWhy()
+    {
+        NavManager.NavigateTo("/#why", forceLoad: true);
+    }
+
+    private void JumpToIndexContactUs()
+    {
+        NavManager.NavigateTo("/contact-us");
+    }
+}

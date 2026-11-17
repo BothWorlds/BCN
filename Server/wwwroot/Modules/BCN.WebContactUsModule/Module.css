@@ -1,0 +1,20 @@
+.textbox:not(.k-state-disabled) .k-input:active {
+    box-shadow: blue;
+}
+
+.textbox:focus-within,
+.input:focus-within {
+    border-color: rgb(3, 169, 244) !important; /* Custom border color on focus */
+    box-shadow: 0 0 0 0.2rem rgba(3, 169, 244, 0.25) !important; /* Optional: custom box shadow */
+}
+
+.send-button {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.58rem 0.8rem;
+    font: inherit;
+    font-weight: 800;
+    color: var(--ink);
+    background: var(--accent);
+    cursor: pointer;
+}

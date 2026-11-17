@@ -1,0 +1,93 @@
+@namespace BCN.SSAHomeModule
+@inherits ModuleBase
+@inject ISettingService SettingService
+@using System.Text.Json
+
+<div class="container-fluid gallery-settings">
+    <p class="text-muted">For the simplest workflow, use the <strong>Add project photos</strong> panel directly on the homepage while signed in as an administrator. These advanced settings can still be used to edit image URLs manually. Empty entries are hidden from the public website.</p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label class="form-label" for="gallery-heading">Section heading</label>
+            <input id="gallery-heading" class="form-control" @bind="_heading" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="gallery-intro">Short introduction</label>
+            <input id="gallery-intro" class="form-control" @bind="_intro" />
+        </div>
+    </div>
+
+    @for (var index = 0; index < _items.Count; index++)
+    {
+        var item = _items[index];
+        <fieldset class="card mb-3 p-3">
+            <legend class="h6 px-2">Project photo @(index + 1)</legend>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="@($"gallery-url-{index}")">Image URL</label>
+                    <input id="@($"gallery-url-{index}")" class="form-control" placeholder="/files/.../project-photo.jpg" @bind="item.ImageUrl" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="@($"gallery-title-{index}")">Project title</label>
+                    <input id="@($"gallery-title-{index}")" class="form-control" placeholder="Downtown storefront sign" @bind="item.Title" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="@($"gallery-category-{index}")">Category</label>
+                    <input id="@($"gallery-category-{index}")" class="form-control" placeholder="Custom Signs" @bind="item.Category" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="@($"gallery-alt-{index}")">Image description</label>
+                    <input id="@($"gallery-alt-{index}")" class="form-control" placeholder="Describe what is visible in the photo" @bind="item.AltText" />
+                    <div class="form-text">This description helps visitors using screen readers and improves image search results.</div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                {
+                    <div class="col-12"><img class="img-thumbnail" style="max-height: 180px" src="@item.ImageUrl" alt="Preview" /></div>
+                }
+            </div>
+        </fieldset>
+    }
+</div>
+
+@code {
+    public override string Title => "Project Gallery Settings";
+
+    private const int GalleryCapacity = 9;
+    private string _heading = "Work made to get noticed.";
+    private string _intro = "A selection of signs, lettering, displays, and custom projects made for customers across Northwest Florida.";
+    private List<GalleryItem> _items = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
+            _heading = SettingService.GetSetting(settings, "GalleryHeading", _heading);
+            _intro = SettingService.GetSetting(settings, "GalleryIntro", _intro);
+            var json = SettingService.GetSetting(settings, "GalleryItems", "[]");
+            _items = JsonSerializer.Deserialize<List<GalleryItem>>(json) ?? new();
+            while (_items.Count < GalleryCapacity) _items.Add(new GalleryItem());
+            if (_items.Count > GalleryCapacity) _items = _items.Take(GalleryCapacity).ToList();
+        }
+        catch (Exception ex)
+        {
+            AddModuleMessage(ex.Message, MessageType.Error);
+        }
+    }
+
+    public async Task UpdateSettings()
+    {
+        try
+        {
+            var settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
+            settings = SettingService.SetSetting(settings, "GalleryHeading", _heading.Trim());
+            settings = SettingService.SetSetting(settings, "GalleryIntro", _intro.Trim());
+            settings = SettingService.SetSetting(settings, "GalleryItems", JsonSerializer.Serialize(_items));
+            await SettingService.UpdateModuleSettingsAsync(settings, ModuleState.ModuleId);
+        }
+        catch (Exception ex)
+        {
+            AddModuleMessage(ex.Message, MessageType.Error);
+        }
+    }
+}
