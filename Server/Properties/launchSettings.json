@@ -1,40 +1,26 @@
 {
   "profiles": {
-    "http": {
+    "Web (Black Cat Networks)": {
       "commandName": "Project",
       "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
       "dotnetRunMessages": true,
-      "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
-      "applicationUrl": "http://localhost:0"
+      "applicationUrl": "https://bcn.dev.localhost:5002",
+      "environmentVariables": { "ASPNETCORE_ENVIRONMENT": "Development" }
     },
-    "https": {
+    "SSA (Severance Sign Art)": {
       "commandName": "Project",
       "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
       "dotnetRunMessages": true,
-      "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
-      "applicationUrl": "https://localhost:0;http://localhost:0"
+      "applicationUrl": "https://ssa.dev.localhost:5002",
+      "environmentVariables": { "ASPNETCORE_ENVIRONMENT": "Development" }
     },
-    "IIS Express": {
-      "commandName": "IISExpress",
+    "BDT (Black Dog Tally)": {
+      "commandName": "Project",
       "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://bdt.dev.localhost:5002",
+      "environmentVariables": { "ASPNETCORE_ENVIRONMENT": "Development" }
     }
   },
-  "$schema": "https://json.schemastore.org/launchsettings.json",
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://localhost:53821/",
-      "sslPort": 44351
-    }
-  }
+  "$schema": "https://json.schemastore.org/launchsettings.json"
 }

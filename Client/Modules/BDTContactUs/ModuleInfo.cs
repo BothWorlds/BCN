@@ -12,39 +12,6 @@ namespace BCN.BDTContactUsModule
             Name = "BDTContactUsModule",
             Description = "BDT Contact Us Module",
             PackageName = "BCN",
-            PageTemplates = new List<PageTemplate>
-            {
-                new PageTemplate
-                {
-                    AliasName = "bigdogtally.com",
-                    Path = "contact-us",
-                    Name = "Contact Us",
-                    ThemeType = "BCN.BDTTheme.Theme, BCN.Client.Oqtane",
-                    PermissionList = new List<Permission>
-                    {
-                        new Permission(PermissionNames.View, RoleNames.Unauthenticated, true),
-                        new Permission(PermissionNames.View, RoleNames.Everyone, true)
-                    },
-                    PageTemplateModules = new List<PageTemplateModule>
-                    {
-                        new PageTemplateModule
-                        {
-                            Header = null,
-                            Title = null,
-                            Pane = "Default",
-                            ModuleDefinitionName = "BCN.BDTContactUsModule, BCN.Client.Oqtane",
-                            PermissionList = new List<Permission>
-                            {
-                        new Permission(PermissionNames.View, RoleNames.Unauthenticated, true),
-                        new Permission(PermissionNames.View, RoleNames.Everyone, true)
-                            }
-                        }
-                    },
-                    Update = true,
-                    Order = 5,
-                    IsNavigation = true
-                },
-            },
             Resources = new List<Resource>
             {
                 new Stylesheet("~/Module.css")

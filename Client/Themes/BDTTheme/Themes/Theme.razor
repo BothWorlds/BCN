@@ -59,7 +59,7 @@
     </footer>
 
 @code {
-    public override string Name => "MyTheme";
+    public override string Name => "BDTTheme";
 
     public override string Panes => PaneNames.Default;
 
@@ -73,7 +73,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await JSRuntime.InvokeVoidAsync("App.BCNWebMyTheme.init");
+        await JSRuntime.InvokeVoidAsync("App.BCNBDTTheme.init");
     }
 
     protected override void OnParametersSet()

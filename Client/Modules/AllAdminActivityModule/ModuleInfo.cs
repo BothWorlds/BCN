@@ -19,7 +19,6 @@ namespace BCN.AllAdminActivityModule
                     AliasName = "*",
                     Path = "admin-activity",
                     Name = "Admin Activity",
-                    ThemeType = "BCN.MyTheme.Theme, BCN.Client.Oqtane",
                     PermissionList = new List<Permission>
                     {
                         new Permission(PermissionNames.View, RoleNames.Admin, true),
