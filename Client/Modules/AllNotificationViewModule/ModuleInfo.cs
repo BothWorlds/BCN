@@ -24,7 +24,6 @@ namespace BCN.AllNotificationViewModule
                     AliasName = "*",
                     Path = "notification-view",
                     Name = "Notification View",
-                    ThemeType = "BCN.MyTheme.Theme, BCN.Client.Oqtane",
                     PageTemplateModules = new List<PageTemplateModule>
                     {
                         new PageTemplateModule

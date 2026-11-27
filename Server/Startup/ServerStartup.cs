@@ -42,7 +42,6 @@ namespace BCN.Startup
                     Console.WriteLine("Reporting exception: " + e.Exception.Message);
                 };
             }
-            //            mvcBuilder.AddNewtonsoftJson();
         }
 
         public void ConfigureServices(IServiceCollection services)

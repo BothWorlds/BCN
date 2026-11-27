@@ -24,7 +24,6 @@ namespace BCN.AllLogViewModule
                     AliasName = "*",
                     Path = "log-view",
                     Name = "LogView",
-                    ThemeType = "BCN.MyTheme.Theme, BCN.Client.Oqtane",
                     PageTemplateModules = new List<PageTemplateModule>
                     {
                         new PageTemplateModule
